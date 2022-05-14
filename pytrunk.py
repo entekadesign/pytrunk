@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# Fork of https://github.com/lots-of-things/pytrunk
+
 import sys
 
 import json
@@ -8,12 +10,26 @@ from datetime import datetime, timedelta
 import requests
 import urllib.parse
 import xml.etree.ElementTree as ET
-
 from selenium import webdriver
+
+# MPT
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+
+# MPT replace 'requests.get' with 'session.get'
+#from requests.adapters import HTTPAdapter
+#from requests.packages.urllib3.util.retry import Retry
+#session = requests.Session()
+#retry = Retry(connect=3, backoff_factor=0.5)
+#adapter = HTTPAdapter(max_retries=retry)
+#session.mount('http://', adapter)
+#session.mount('https://', adapter)
+
 
 def save_lists():
   with open('lists.json', 'w') as f:
     json.dump(requests.get('https://communitywiki.org/trunk/api/v1/list/').json(), f, indent=2)
+#    json.dump(session.get('https://communitywiki.org/trunk/api/v1/list/').json(), f, indent=2)
 
 def find_tooters():
   '''
@@ -25,6 +41,7 @@ def find_tooters():
   for l in lists:
     print(f'running list: {l}')
     res2 = requests.get(f'https://communitywiki.org/trunk/api/v1/list/{l}')
+#    res2 = session.get(f'https://communitywiki.org/trunk/api/v1/list/{l}')
     for a in res2.json():
       acct = a['acct']
       if acct in user_counter:
@@ -35,6 +52,7 @@ def find_tooters():
 
       try:
         resp = requests.get(f'https://{domain}/users/{name}.rss')
+#        resp = session.get(f'https://{domain}/users/{name}.rss')
         root = ET.ElementTree(ET.fromstring(resp.content)).getroot()   
 
         desc = root.find('./channel/description') 
@@ -81,7 +99,13 @@ def follow_tooters():
   with open('setup.json', 'r') as f:
     setup = json.load(f)
     
-  driver = webdriver.Chrome(executable_path=setup['webdriver_location'])   
+# MPT
+  service = Service(setup['webdriver_location'])
+  options = Options()
+  options.add_argument("start-maximized")
+  options.add_argument("--remote-debugging-port=9515")
+
+  driver = webdriver.Chrome(service=service,options=options)
   driver.get(f'{setup["home_domain"]}/auth/sign_in')
   signin = input('type "y" once youve signed in: ')
 
