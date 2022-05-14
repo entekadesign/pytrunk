@@ -102,7 +102,7 @@ def follow_tooters():
 # MPT
   service = Service(setup['webdriver_location'])
   options = Options()
-  options.add_argument("start-maximized")
+#  options.add_argument("start-maximized")
   options.add_argument("--remote-debugging-port=9515")
 
   driver = webdriver.Chrome(service=service,options=options)
